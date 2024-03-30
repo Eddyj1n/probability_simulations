@@ -1,0 +1,212 @@
+---
+title: "Discrete Random Variables, pmfs and dfs"
+format: html
+editor: visual
+---
+
+## Running Code
+
+Often we are interested in some random variables associated with an experiment. Con- sider the experiment where we roll 2 dice and observe the outcome of each die. We can simulate this experiment 1000 times using the following code
+
+```{r}
+two_dice = matrix(sample(1:6, 2000, replace = TRUE), ncol=2)
+```
+
+If we let X(ω)=ω1+ω2 be the sum of the outcomes of the two dice then X is a random variable that takes values in 2, 3, . . . , 12. We can simulate many realizations of this random variable by using our outcomes of the repeated experiment above.
+
+```{r}
+X = apply(two_dice,1,sum)
+```
+
+Now lets find all the distinct values of X in our experiments, as well as how often they occur:
+
+```{r}
+X_vals=sort(unique(X))
+L = length(X_vals)
+counts = numeric(L)
+for (i in 1:L){counts[i]= sum(X == X_vals[i])}
+
+vals = table(X)
+```
+
+The proportion of times (in our repeated experiments) that X takes each value is an estimate of the probability that X takes that value in a single experiment. In other words, these numbers give an estimate of the probability mass function of X.
+
+```{r}
+uu = as.numeric(names(vals))
+vv = as.numeric(vals) / 1000
+plot(uu, vv, xlab = "x", ylab = "Estimate of P(X=x)", pch = 19)
+```
+
+Now Suppose there are 10 dice and we increase the repetitions to 1 million.
+
+```{r}
+ten_dice = matrix(sample(1:6, 1000000, replace = TRUE), ncol=10)
+
+X_ten = apply(ten_dice,1,sum)
+
+X_vals_ten =sort(unique(X_ten))
+
+L_ten = length(X_vals_ten)
+
+counts_ten = numeric(L_ten)
+for (i in 1:L){counts_ten[i]= sum(X == X_vals_ten[i])}
+
+vals_ten = table(X_ten)
+
+uu = as.numeric(names(vals_ten))
+vv = as.numeric(vals_ten) / 1000000
+plot(uu, vv, xlab = "x", ylab = "Estimate of P(X=x)", pch = 19)
+
+```
+
+Now, Let's simulate 10000 realisations of a Geometric(1/4) random variable G taking values in 1, 2, . . . . Recall that such a Geometric random variable can be viewed as the number of trials until seeing a success in repeated independent trials each with probability 1/4 of success. There is a potential issue here that no matter how many trials we perform, we might not have seen the first success (in other words the set of possible values for G is unbounded). For each experiment here we conduct 1000 trials.
+
+```{r}
+trials = matrix(sample(0:1, 10^7, prob=c(3,1), replace=TRUE), ncol=1000 )
+```
+
+What is the probability that in a given one of these experiments, we do not see any success in the 1000 trials?
+
+```{r}
+n_trials = 1000
+n_experiments = 10000
+
+#Solution analytically 
+analytical_soln = 0.75^n_trials
+
+#Based on the experiment, we can sum the rows columnwise to see the proportion of 0 columns 
+experimental_soln = apply(trials,MARGIN = 2,sum)
+experimental_soln_count = sum(experimental_soln==0)
+
+#Probability that in 10000 experiments, each experiment with 1000 trials, we don't see a success. This simply the union of all the experiments as separate events 
+upper_bound = analytical_soln*n_experiments
+
+```
+
+Due to the above problem, when we compute the time of the first success, we have to deal with the situation where there might not be any. We'll create a function that finds the first success (first 1) in a vector of "trials" - it returns NA if it does not find a success.
+
+```{r}
+find_first_1 = function(x){
+              ifelse(sum(x)>0, min(which(x==1)), NA)}
+```
+Now let’s apply that function to our 10000 experiments to get 10000 realisations of G. Since we already know about the Geometric distribution, we would expect the proportion of times that G = 1 in our experiments to be about 1/4, the proportion of times that G = 2 to be about 3/4 × 1/4 = 3/16 etc.
+
+```{r}
+G = apply(trials, 1, find_first_1)
+Y = table(G)
+plot(as.numeric(names(Y)), as.numeric(Y) / 10000,
+xlab = "n", ylab = "estimate of P(G=n)", pch = 19)
+```
+A “solution” to the potential (but tiny) bias we have involves repeated sampling until we see a success. This can be done with a while loop as follows:
+```{r}
+one_sim <- numeric(0)
+no_success <- TRUE
+while (no_success) {
+  one_sim <- c(one_sim, sample(0:1, 100, prob = c(3, 1), replace = TRUE))
+  Gval <- which(one_sim == 1)[1]
+  if (!is.na(Gval)) {
+    no_success <- FALSE
+  }
+}
+Gval
+
+#R has built-in functionality to generate realisations of Geometric random variables, using rgeom, which saves us doing all the above work.
+G = 1 + rgeom(10000, 1/4)
+Y = table(G)
+plot(as.numeric(names(Y)), as.numeric(Y) / 10000,
+                      xlab = "n", ylab = "estimate of P(G=n)", pch = 19)
+```
+Similary, we can calculate and plot the pmf by looping through n=0 to 10,000 via the formula of the pdf 
+```{r}
+# Set the parameter p and the range of n
+p <- 1/4
+n <- 0:35
+
+# Calculate the PMF for each value of n
+pmf <- (1 - p)^n * p
+
+# Plot the PMF
+plot(n, pmf, type = "h", xlab = "n", ylab = "Probability", 
+     main = "Geometric Distribution PMF (p = 1/4)", xlim = c(0, 35), ylim = c(0, max(pmf)))
+```
+Now we write code to generate 10000 realisations of Binomial(10,2/3) random variables defined from a sequence of independent Bernoulli trials. Plot the estimate of the probability mass function obtained from these realisations. Now repeat using the rbinom function to generate the realisations instead. Finally, compare these results to the values obtained using dbinom.
+```{r}
+# Set the parameters
+n <- 10
+p <- 2/3
+num_realizations <- 10000
+
+# Method 1: Generate realizations using sequences of Bernoulli trials
+realizations1 <- replicate(num_realizations, sum(sample(c(0, 1), n, replace = TRUE, prob = c(1-p, p))))
+
+# Method 2: Generate realizations using the rbinom function
+realizations2 <- rbinom(num_realizations, n, p)
+
+# Calculate the estimated PMFs
+pmf1 <- table(factor(realizations1, levels = 0:n)) / num_realizations
+pmf2 <- table(factor(realizations2, levels = 0:n)) / num_realizations
+
+# Calculate the theoretical PMF using dbinom
+x <- 0:n
+theoretical_pmf <- dbinom(x, n, p)
+
+# Plot the estimated and theoretical PMFs
+par(mfrow = c(1, 3))
+
+# Plot for Method 1
+plot(x, pmf1, type = "h", xlab = "x", ylab = "Probability", main = "Estimated PMF (Bernoulli Trials)", xlim = c(0, n), ylim = c(0, max(pmf1, pmf2, theoretical_pmf)))
+points(x, theoretical_pmf, type = "l", col = "red")
+
+# Plot for Method 2
+plot(x, pmf2, type = "h", xlab = "x", ylab = "Probability", main = "Estimated PMF (rbinom)", xlim = c(0, n), ylim = c(0, max(pmf1, pmf2, theoretical_pmf)))
+points(x, theoretical_pmf, type = "l", col = "red")
+
+# Plot for Theoretical PMF
+plot(x, theoretical_pmf, type = "h", xlab = "x", ylab = "Probability", main = "Theoretical PMF (dbinom)", xlim = c(0, n), ylim = c(0, max(pmf1, pmf2, theoretical_pmf)))
+
+```
+```{r}
+# Set the parameter lambda
+lambda <- 2
+
+# Define the range of x values
+x <- -1:10
+
+# Calculate the CDF values using ppois
+cdf <- ppois(x, lambda = lambda)
+
+# Plot the CDF
+plot(x, cdf, type = "s", xlab = "x", ylab = "F(x)", main = "Poisson Distribution Function (λ = 2)", xlim = c(-1, 10), ylim = c(0, 1))
+```
+We Plot the estimate of the distribution function F(x) of the sum of two dice obtained from 1000 experiments (as at the beginning of this lab) for values of x between 0 and 13.
+
+```{r}
+# Set the number of experiments
+num_experiments <- 1000
+
+# Generate 1000 experiments of rolling two dice and calculate their sum
+dice_sums <- replicate(num_experiments, sum(sample(1:6, 2, replace = TRUE)))
+
+# Define the range of x values
+x <- 0:13
+
+# Calculate the estimated CDF
+estimated_cdf <- sapply(x, function(x) sum(dice_sums <= x) / num_experiments)
+
+# Plot the estimated CDF
+plot(x, estimated_cdf, type = "s", xlab = "x", ylab = "F(x)", main = "Estimated Distribution Function of Sum of Two Dice", xlim = c(0, 13), ylim = c(0, 1))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
