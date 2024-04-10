@@ -80,7 +80,7 @@ q <- 9/20 # prob of owl moving forward
 # Analytical solution to hare winning 
 p_hare_wins = p^4+4*p^5*(1-p)+15*p^6*(1-p)^2 +56*p^7*(1-p)^3
 
-# Analytical solution of owl winning 
+# Analytical solution of owl winning [BELOW IS WRONG NEED TO USE CATALAN SERIES]
 p_owl_wins_within_3_moves = q + (q^2)
 p_owl_wins_in_5_moves = 2*(q^3)*((1-q)^2)
 p_owl_wins_in_7_moves = 3*(q^4)*((1-q)^3)

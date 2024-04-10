@@ -1,4 +1,4 @@
-#======================================================================
+ #======================================================================
 # Probability (MAST20006) Assignment 2
 # Question 3: Basketball Tournament Simulation 
 # Author: Edward Jin
@@ -76,14 +76,15 @@ simulate_championship <- function(p, n){
   }
 
   # Return the championship wins as vector 
-  return(c(
+  results <- data.frame(
     "Team A Championships" = A_championships,
     "Team B Championships" = B_championships,
     "Total Team A Wins" = total_A_wins,
     "Total Team B Wins" = total_B_wins,
     "Total Games Played" = total_games
-  ))
-
+  )
+  
+  return(results)
 }
 
 # 2. Run Experiments ------------------------------------------------------
@@ -93,9 +94,13 @@ n = 100000 # no of experiments
 p = 0.55 # probability of win in home team 
 
 # Run the function
-simulate_championship(p, n)
+results=simulate_championship(p, n)
 
-
+# Calculate expected values and probability 
+expected_wins_A = results$Total.Team.A.Wins/n
+expected_wins_B = results$Total.Team.B.Wins/n
+simulated_prob_A_trophy= results$Team.A.Championships/n
+simulated_prob_B_trophy= results$Team.B.Championships/n
 
 
   
