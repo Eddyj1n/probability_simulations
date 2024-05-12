@@ -1,2 +1,2 @@
 # Probability Simulations
- I run different simulations covered in the UniMelb Subject MAST20006
+To brush my probability I run different simulations to computationally solve probability problems. 
