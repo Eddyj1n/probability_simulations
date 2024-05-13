@@ -1,2 +1,2 @@
 # Probability Simulations
-To consolidate my understanding in probabilty, I run different simulations covered in the UniMelb Subject MAST20006
+To brush my probability I run different simulations to computationally solve probability problems. 
